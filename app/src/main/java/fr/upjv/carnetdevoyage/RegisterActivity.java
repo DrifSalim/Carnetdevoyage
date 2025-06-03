@@ -80,7 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
                             // Création d'un document utilisateur dans Firestore
                             createUserDocument(user.getUid(), nom, email);
                         });
-                        Toast.makeText(this, "User créée "+user.getDisplayName(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "User créée avec succes", Toast.LENGTH_SHORT).show();
 
                     }
                     else{
@@ -103,7 +103,8 @@ public class RegisterActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
 
                     // Redirection vers MainActivity
-                    startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+                    Intent i = new Intent(this, MainActivity.class);
+                    startActivity(i);
                     finish();
                 })
                 .addOnFailureListener(e -> {
