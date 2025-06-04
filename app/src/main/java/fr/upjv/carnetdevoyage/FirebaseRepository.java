@@ -43,7 +43,22 @@ public class FirebaseRepository {
                 .orderBy("nom", Query.Direction.ASCENDING);
         return null;
     }
+    public Task<Void> updateVoyage(Voyage voyage) {
+        if (voyage.getIdVoyage() == null) {
+            Log.e("Repository", "Impossible de mettre à jour un voyage sans ID");
+            return null; // Ou throw new IllegalArgumentException
+        }
 
+        return db.collection("voyages")
+                .document(voyage.getIdVoyage())
+                .set(voyage)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Repository", "Voyage mis à jour: " + voyage.getIdVoyage());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Repository", "Erreur lors de la mise à jour du voyage", e);
+                });
+    }
 
     //points
     public Task<DocumentReference> addPoint(String voyageId, Point point) {
@@ -59,4 +74,9 @@ public class FirebaseRepository {
     }
 
 
+
+    // Interface pour la synchronisation
+    public interface OnVoyageLoadedListener {
+        void onVoyageLoaded(Voyage voyage);
+    }
 }

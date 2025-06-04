@@ -1,17 +1,28 @@
 package fr.upjv.carnetdevoyage;
 
+import static androidx.core.location.LocationManagerCompat.requestLocationUpdates;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.firebase.Timestamp;
 
 public class LocationService extends Service {
@@ -52,7 +63,77 @@ public class LocationService extends Service {
             }
         };
     }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            voyageId = intent.getStringExtra("voyageId");
+            if (intent.hasExtra("frequence")) {
+                frequence = intent.getIntExtra("frequence", 10000);
+            }
+        }
 
+        if (voyageId == null) {
+            Log.e("Service de Localisation", "Aucun voyage spécifié pour le suivi de position");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        createNotificationChannel();
+        Notification notification = createNotification();
+        startForeground(NOTIFICATION_ID, notification);
+
+        requestLocationUpdates();
+
+        return START_STICKY;
+    }
+
+    private Notification createNotification() {
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE
+        );
+
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Carnet de Voyage")
+                .setContentText("Suivi de position en cours...")
+                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setContentIntent(pendingIntent)
+                .build();
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Service de localisation",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(serviceChannel);
+        }
+    }
+
+    private void requestLocationUpdates() {
+        try {
+            //on recupere la position en fonction de la frequence choisie
+            LocationRequest locationRequest = new LocationRequest.Builder(frequence)
+                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                    .setMinUpdateIntervalMillis(frequence*1000)
+                    .build();
+
+            fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+            );
+        } catch (SecurityException e) {
+            Log.e("Service de localisation", "Erreur de permission: " + e.getMessage());
+        }
+    }
 
     @Nullable
     @Override
