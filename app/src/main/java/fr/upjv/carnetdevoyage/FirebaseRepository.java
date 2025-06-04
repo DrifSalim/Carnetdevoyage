@@ -1,6 +1,6 @@
 package fr.upjv.carnetdevoyage;
 
-import android.widget.Toast;
+import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,6 +19,10 @@ public class FirebaseRepository {
         auth = FirebaseAuth.getInstance();
     }
     public Task<DocumentReference> ajouterVoyage(Voyage voyage) {
+        FirebaseUser user = auth.getCurrentUser();
+        if(user!=null){
+           voyage.setUserId(user.getUid());
+        }
         return db.collection("voyages").add(voyage);
     }
 
@@ -34,10 +38,25 @@ public class FirebaseRepository {
 
     public Query recupererTousVoyages() {
         FirebaseUser user = auth.getCurrentUser();
-            return db.collection("voyages")
+        if(user!=null)
+            return db.collection("voyages").whereEqualTo("userId",user.getUid())
                 .orderBy("nom", Query.Direction.ASCENDING);
+        return null;
     }
 
+
+    //points
+    public Task<DocumentReference> addPoint(String voyageId, Point point) {
+        // Nous ajoutons directement à la sous-collection du voyage spécifié
+        return db.collection("voyages").document(voyageId).collection("points")
+                .add(point)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("Point", "Point ajouté au voyage " + voyageId + " avec ID: " + documentReference.getId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Point", "Erreur lors de l'ajout du point au voyage " + voyageId, e);
+                });
+    }
 
 
 }

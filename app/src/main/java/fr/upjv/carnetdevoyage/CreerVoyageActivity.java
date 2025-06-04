@@ -8,13 +8,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class CreerVoyageActivity extends AppCompatActivity {
     EditText nomEditText;
@@ -64,17 +58,12 @@ public class CreerVoyageActivity extends AppCompatActivity {
         }
         Voyage v = new Voyage(nom, description, seekbar);
         db.ajouterVoyage(v).addOnSuccessListener(documentReference -> {
-            Toast.makeText(this, "Voyage ajouté avec succès", Toast.LENGTH_SHORT).show();
-
+            Toast.makeText(this, "Voyage créée avec succès", Toast.LENGTH_SHORT).show();
+            finish();
         })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_SHORT).show();
 
                 });
-
-
-
-
-
     }
 }
