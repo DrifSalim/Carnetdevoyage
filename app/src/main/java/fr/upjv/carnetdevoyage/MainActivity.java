@@ -87,11 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (voyages.isEmpty()) {
                     Toast.makeText(this,"Aucun voyage n'est récupéré",Toast.LENGTH_LONG).show();
-
-                } else {
-                    Toast.makeText(this,""+voyages.toString(),Toast.LENGTH_LONG).show();
-
-
                 }
             } else {
                 Log.w("MainActivity", "Value est null dans SnapshotListener, mais error est aussi null.");
