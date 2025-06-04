@@ -388,9 +388,6 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
     protected void onDestroy() {
         mapView.onDestroy();
         super.onDestroy();
-        if (isEncours) {
-            stopTracking();
-        }
     }
 
 

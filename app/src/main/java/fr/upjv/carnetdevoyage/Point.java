@@ -9,7 +9,8 @@ public class Point {
     private Timestamp instant;
     private String idVoyage;
 
-    public Point(double longitude, double latitude, Timestamp instant, String idVoyage) {
+    public Point(){}
+    public Point( double longitude, double latitude, Timestamp instant, String idVoyage) {
         this.longitude = longitude;
         this.latitude = latitude;
         this.instant = instant;

@@ -17,9 +17,7 @@ public class Voyage {
     private boolean encours;
     private List<Point> position;
     private String userId;
-
-
-    public Voyage(){}
+    public Voyage () {}
     public Voyage(String nom, String description, int frequence) {
         this.nom = nom;
         this.description = description;
@@ -29,6 +27,16 @@ public class Voyage {
         this.position = new ArrayList<>();
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+
+
     public boolean isEncours() {
         return encours;
     }
@@ -37,7 +45,7 @@ public class Voyage {
         this.encours = encours;
     }
 
-    public String  getIdVoyage() {
+    public String getIdVoyage() {
         return idVoyage;
     }
 
@@ -110,8 +118,5 @@ public class Voyage {
     public void terminerVoyage(){
         this.encours=false;
         this.fin=Timestamp.now();
-    }
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 }
