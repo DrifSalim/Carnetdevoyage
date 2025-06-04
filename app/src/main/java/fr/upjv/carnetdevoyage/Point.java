@@ -3,25 +3,24 @@ package fr.upjv.carnetdevoyage;
 import com.google.firebase.Timestamp;
 
 public class Point {
-    private int idPoint;
+    private String idPoint;
     private double longitude;
     private double latitude;
     private Timestamp instant;
-    private int idVoyage;
+    private String idVoyage;
 
-    public Point(int idPoint, double longitude, double latitude, Timestamp instant, int idVoyage) {
-        this.idPoint = idPoint;
+    public Point(double longitude, double latitude, Timestamp instant, String idVoyage) {
         this.longitude = longitude;
         this.latitude = latitude;
         this.instant = instant;
         this.idVoyage = idVoyage;
     }
 
-    public int getIdPoint() {
+    public String getIdPoint() {
         return idPoint;
     }
 
-    public void setIdPoint(int idPoint) {
+    public void setIdPoint(String idPoint) {
         this.idPoint = idPoint;
     }
 
@@ -49,11 +48,11 @@ public class Point {
         this.instant = instant;
     }
 
-    public int getIdVoyage() {
+    public String getIdVoyage() {
         return idVoyage;
     }
 
-    public void setIdVoyage(int idVoyage) {
+    public void setIdVoyage(String idVoyage) {
         this.idVoyage = idVoyage;
     }
 
