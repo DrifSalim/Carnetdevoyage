@@ -1,12 +1,14 @@
 package fr.upjv.carnetdevoyage;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentId;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Voyage {
-    private int idVoyage;
+    @DocumentId
+    private String idVoyage;
     private String nom;
     private String description;
     private int frequence;
@@ -14,9 +16,9 @@ public class Voyage {
     private Timestamp fin;
     private boolean encours;
     private List<Point> position;
-
-    public Voyage(int idVoyage, String nom, String description, int frequence) {
-        this.idVoyage = idVoyage;
+    private String userId;
+    public Voyage () {}
+    public Voyage(String nom, String description, int frequence) {
         this.nom = nom;
         this.description = description;
         this.frequence = frequence;
@@ -24,6 +26,16 @@ public class Voyage {
         this.encours=true;
         this.position = new ArrayList<>();
     }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+
 
     public boolean isEncours() {
         return encours;
@@ -33,11 +45,11 @@ public class Voyage {
         this.encours = encours;
     }
 
-    public int getIdVoyage() {
+    public String getIdVoyage() {
         return idVoyage;
     }
 
-    public void setIdVoyage(int idVoyage) {
+    public void setIdVoyage(String idVoyage) {
         this.idVoyage = idVoyage;
     }
 

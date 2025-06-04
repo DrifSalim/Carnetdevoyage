@@ -1,7 +1,5 @@
 package fr.upjv.carnetdevoyage;
 
-import android.widget.Toast;
-
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -19,6 +17,10 @@ public class FirebaseRepository {
         auth = FirebaseAuth.getInstance();
     }
     public Task<DocumentReference> ajouterVoyage(Voyage voyage) {
+        FirebaseUser user = auth.getCurrentUser();
+        if(user!=null){
+           voyage.setUserId(user.getUid());
+        }
         return db.collection("voyages").add(voyage);
     }
 
@@ -34,8 +36,10 @@ public class FirebaseRepository {
 
     public Query recupererTousVoyages() {
         FirebaseUser user = auth.getCurrentUser();
-            return db.collection("voyages")
+        if(user!=null)
+            return db.collection("voyages").whereEqualTo("userId",user.getUid())
                 .orderBy("nom", Query.Direction.ASCENDING);
+        return null;
     }
 
 
