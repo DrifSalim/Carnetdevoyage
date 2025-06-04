@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreerVoyageActivity">
+
+  <TextView
+      android:id="@+id/textView"
+      android:layout_width="180dp"
+      android:layout_height="0dp"
+      android:layout_marginTop="80dp"
+      android:layout_marginBottom="25dp"
+      android:text="Nouveau Voyage"
+      android:textSize="24sp"
+      app:layout_constraintBottom_toTopOf="@+id/nomEditText"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent" />
+
+  <EditText
+      android:id="@+id/nomEditText"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:layout_marginStart="16dp"
+      android:layout_marginEnd="16dp"
+      android:layout_marginBottom="18dp"
+      android:ems="10"
+      android:hint="Nom Du Voyage"
+      android:inputType="text"
+      app:layout_constraintBottom_toTopOf="@+id/descriptionEditText"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+  <SeekBar
+      android:id="@+id/seekBar"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:layout_marginStart="20dp"
+      android:layout_marginTop="12dp"
+      android:layout_marginEnd="20dp"
+      android:layout_marginBottom="7dp"
+      app:layout_constraintBottom_toBottomOf="@+id/frequenceTextVIew"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+  <Button
+      android:id="@+id/creerVoyageBouton"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:layout_marginStart="22dp"
+      android:layout_marginEnd="22dp"
+      android:layout_marginBottom="195dp"
+      android:onClick="onClickCreerVoyage"
+      android:text="Creer le voyage"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/frequenceTextVIew" />
+
+  <TextView
+      android:id="@+id/frequenceTextVIew"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="18dp"
+      android:layout_marginBottom="36dp"
+      android:text="Frequence : 1 seconde"
+      app:layout_constraintBottom_toTopOf="@+id/creerVoyageBouton"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+  <EditText
+      android:id="@+id/descriptionEditText"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:layout_marginStart="16dp"
+      android:layout_marginEnd="16dp"
+      android:layout_marginBottom="44dp"
+      android:ems="10"
+      android:hint="Description (optionnelle)"
+      android:inputType="text"
+      app:layout_constraintBottom_toTopOf="@+id/textView2"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/nomEditText" />
+
+  <TextView
+      android:id="@+id/textView2"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="21dp"
+      android:layout_marginBottom="62dp"
+      android:text="Frequence d'enregistrement des positions: "
+      android:textSize="16sp"
+      app:layout_constraintBottom_toTopOf="@+id/frequenceTextVIew"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/descriptionEditText" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
