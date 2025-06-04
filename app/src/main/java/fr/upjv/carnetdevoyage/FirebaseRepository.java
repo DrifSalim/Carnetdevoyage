@@ -46,7 +46,7 @@ public class FirebaseRepository {
     public Task<Void> updateVoyage(Voyage voyage) {
         if (voyage.getIdVoyage() == null) {
             Log.e("Repository", "Impossible de mettre à jour un voyage sans ID");
-            return null; // Ou throw new IllegalArgumentException
+            return null;
         }
 
         return db.collection("voyages")
