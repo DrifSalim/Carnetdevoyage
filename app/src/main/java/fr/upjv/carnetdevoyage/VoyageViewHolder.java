@@ -30,7 +30,12 @@ public class VoyageViewHolder extends RecyclerView.ViewHolder {
     public void mettreAjourLigne(Voyage unVoyage){
         this.textViewNom.setText(unVoyage.getNom());
         this.textViewDescription.setText(""+unVoyage.getDescription());
-        this.textViewStatut.setText(""+unVoyage.isEncours());
+        if(unVoyage.isEncours()) {
+            this.textViewStatut.setText("En cours");
+        }
+        else
+            this.textViewStatut.setText("Terminé");
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
         Timestamp debut = unVoyage.getDebut();
         this.textViewDate.setText("Débuté le : "+dateFormat.format(debut.toDate()));
