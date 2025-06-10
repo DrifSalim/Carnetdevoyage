@@ -9,12 +9,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class VoyageAdapter extends RecyclerView.Adapter <VoyageViewHolder> {
+public class VoyageAdapter extends RecyclerView.Adapter<VoyageViewHolder> {
 
     private List<Voyage> lesVoyages;
 
-    public VoyageAdapter(List<Voyage> lesVoyages){
-        this.lesVoyages=lesVoyages;
+    // interface pour gérer le clic
+    public interface OnItemClickListener {
+        void onItemClick(Voyage voyage);
+    }
+
+    private OnItemClickListener listener;
+
+    // *définir le listener depuis l'activité
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
+    public VoyageAdapter(List<Voyage> lesVoyages) {
+        this.lesVoyages = lesVoyages;
     }
 
     public List<Voyage> getLesVoyages() {
@@ -23,24 +35,28 @@ public class VoyageAdapter extends RecyclerView.Adapter <VoyageViewHolder> {
 
     public void setLesVoyages(List<Voyage> lesVoyages) {
         this.lesVoyages = lesVoyages;
-        notifyDataSetChanged();
+        notifyDataSetChanged(); // recharger la liste
     }
 
     @NonNull
     @Override
     public VoyageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        VoyageViewHolder leVoyageViewHolder;
-        LayoutInflater monLayoutInflater;
-        monLayoutInflater=LayoutInflater.from(parent.getContext());
-        View view=monLayoutInflater.inflate(R.layout.layout_voyage_item,parent,false);
-        leVoyageViewHolder= new VoyageViewHolder(view);
-        return leVoyageViewHolder;
+        LayoutInflater monLayoutInflater = LayoutInflater.from(parent.getContext());
+        View view = monLayoutInflater.inflate(R.layout.layout_voyage_item, parent, false);
+        return new VoyageViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull VoyageViewHolder holder, int position) {
-        holder.mettreAjourLigne(lesVoyages.get(position));
+        Voyage voyage = lesVoyages.get(position);
+        holder.mettreAjourLigne(voyage);
 
+        // Clique sur l'élément
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(voyage);
+            }
+        });
     }
 
     @Override
