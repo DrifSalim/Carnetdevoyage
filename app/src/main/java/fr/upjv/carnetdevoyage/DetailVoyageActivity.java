@@ -25,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -70,7 +71,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         textViewStatus = findViewById(R.id.textViewStatut);
         mapView = findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(this);
+        mapView.getMapAsync(this); //recuperer une instance de la map
 
         buttonArreterVoyage = findViewById(R.id.buttonArreterVoyage);
         buttonEnregistrerPosition = findViewById(R.id.buttonEnregistrerPosition);
@@ -90,7 +91,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                             //Afficher les informations du voyage dans l'interface
                             afficherInfoVoyage(voyage);
 
-                            //les points du voyage
+                            //charger les points du voyage
                             loadPointsForVoyage();
                         } else {
                             Toast.makeText(this, "Erreur lors du chargement du voyage", Toast.LENGTH_SHORT).show();
@@ -168,7 +169,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
             return;
         }
 
-        PolylineOptions polylineOptions = new PolylineOptions();
+        PolylineOptions polylineOptions = new PolylineOptions(); //definir une ligne de chemin
         LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
         //Recuperer les points pour dessiner le chemin
         for (Point point : points) {
@@ -180,14 +181,16 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         polylineOptions.color(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
         polylineOptions.width(8);
 
-        map.addPolyline(polylineOptions);
-
+        map.addPolyline(polylineOptions); //ajouter ce chemin sur la map
+        //recuperer le point de debut et de fin
         Point debut = points.get(0);
         Point fin = points.get(points.size() - 1);
 
-        map.addMarker(new MarkerOptions()
-                .position(new LatLng(debut.getLatitude(), fin.getLongitude()))
-                .title("Départ"));
+        map.addCircle(new CircleOptions()
+                .center(new LatLng(debut.getLatitude(),debut.getLongitude()))
+                .radius(5) // Petit rayon pour un point
+                .fillColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark))
+                .strokeWidth(0)); // Pas de contour
 
         String endMarkerTitle = currentVoyage.isEncours() ? "Position actuelle" : "Arrivée";
         map.addMarker(new MarkerOptions()
@@ -241,7 +244,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Si la permission est accordée, réessayez de centrer la carte ou d'enregistrer la position
+                // Si la permission est accordée, réessayer de centrer la carte ou d'enregistrer la position
                 if (currentVoyage != null && currentVoyage.getPosition() != null && !currentVoyage.getPosition().isEmpty()) {
                     updateMapWithVoyagePath(currentVoyage.getPosition());
                 } else {
