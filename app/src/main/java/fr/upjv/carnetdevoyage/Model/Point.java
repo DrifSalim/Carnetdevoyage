@@ -1,4 +1,4 @@
-package fr.upjv.carnetdevoyage;
+package fr.upjv.carnetdevoyage.Model;
 
 import com.google.firebase.Timestamp;
 

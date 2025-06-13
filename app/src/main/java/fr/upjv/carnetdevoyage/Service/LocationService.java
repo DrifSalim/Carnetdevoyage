@@ -1,6 +1,4 @@
-package fr.upjv.carnetdevoyage;
-
-import static androidx.core.location.LocationManagerCompat.requestLocationUpdates;
+package fr.upjv.carnetdevoyage.Service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -25,9 +23,14 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.firebase.Timestamp;
 
+import fr.upjv.carnetdevoyage.MainActivity;
+import fr.upjv.carnetdevoyage.Model.Point;
+import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
+
 public class LocationService extends Service {
     private static final String CHANNEL_ID = "location_channel";
     private static final int NOTIFICATION_ID = 1;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
     private FusedLocationProviderClient fusedLocationClient; //pour récuperer la derniere position connu
     private LocationCallback locationCallback; //pour definir quoi faire à chaque mise à jour de pos
     private FirebaseRepository repository;
@@ -120,7 +123,7 @@ public class LocationService extends Service {
     private void requestLocationUpdates() {
         try {
             //on recupere la position en fonction de la frequence choisie
-            LocationRequest locationRequest = new LocationRequest.Builder(frequence)
+            LocationRequest locationRequest = new LocationRequest.Builder(frequence*1000)
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
                     .setMinUpdateIntervalMillis(frequence*1000)
                     .build();
@@ -134,7 +137,13 @@ public class LocationService extends Service {
             Log.e("Service de localisation", "Erreur de permission: " + e.getMessage());
         }
     }
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+    }
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {

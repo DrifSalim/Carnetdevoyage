@@ -17,6 +17,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.upjv.carnetdevoyage.Model.Voyage;
+import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
+
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
@@ -84,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                     if (voyage != null) {
                         voyage.setIdVoyage(document.getId());
                         voyages.add(voyage);
-                        Log.d("Voyages",""+voyages);
                     } else {
                         Log.w("MainActivity", "Document non convertible : " + document.getId());
                     }

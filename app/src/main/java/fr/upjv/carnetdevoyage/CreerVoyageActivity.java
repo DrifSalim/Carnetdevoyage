@@ -1,5 +1,9 @@
 package fr.upjv.carnetdevoyage;
 
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -9,8 +13,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import fr.upjv.carnetdevoyage.Model.Voyage;
+import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
+import fr.upjv.carnetdevoyage.Service.LocationService;
 
 public class CreerVoyageActivity extends AppCompatActivity {
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+
     EditText nomEditText;
     EditText descriptionEditText;
     SeekBar seekBar;
@@ -54,11 +67,34 @@ public class CreerVoyageActivity extends AppCompatActivity {
         int seekbar = seekBar.getProgress();
         if(TextUtils.isEmpty(nom)){
             nomEditText.setError("Le nom est obligatoire");
+            nomEditText.requestFocus();
+            return;
+        }
+        //Si la permission de notifications, n'est pas accorder on va la demandé
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+                return;
+            }
+        }
+
+        //Si la permission d'acces a la position, n'est pas accorder on va la demandé
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
         Voyage v = new Voyage(nom, description, seekbar);
         db.ajouterVoyage(v).addOnSuccessListener(documentReference -> {
             Toast.makeText(this, "Voyage créée avec succès", Toast.LENGTH_SHORT).show();
+                    //Si tout va bien, lancer le service
+            Intent serviceIntent = new Intent(this, LocationService.class);
+            serviceIntent.putExtra("voyageId", documentReference.getId());
+            serviceIntent.putExtra("frequence", seekbar);
+            startService(serviceIntent);
             finish();
         })
                 .addOnFailureListener(e -> {
