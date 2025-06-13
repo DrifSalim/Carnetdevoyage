@@ -1,8 +1,9 @@
-package fr.upjv.carnetdevoyage;
+package fr.upjv.carnetdevoyage.Repository;
 
 import android.util.Log;
 
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -10,6 +11,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import fr.upjv.carnetdevoyage.Model.Point;
+import fr.upjv.carnetdevoyage.Model.Voyage;
 
 public class FirebaseRepository {
     FirebaseFirestore db;
@@ -20,10 +24,34 @@ public class FirebaseRepository {
     }
     public Task<DocumentReference> ajouterVoyage(Voyage voyage) {
         FirebaseUser user = auth.getCurrentUser();
-        if(user!=null){
-           voyage.setUserId(user.getUid());
+        if (user == null) {
+            // Gérer le cas où l'utilisateur n'est pas connecté
+            return Tasks.forException(new Exception("Utilisateur non connecté"));
         }
-        return db.collection("voyages").add(voyage);
+
+        String userId = user.getUid();
+        voyage.setUserId(userId);
+
+        // Vérifier s'il y a un voyage en cours
+        return db.collection("voyages")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("encours", true) // Supposons qu'il y a un champ boolean "enCours"
+                .get()
+                .continueWithTask(task -> {
+                    if (task.isSuccessful()) {
+                        QuerySnapshot querySnapshot = task.getResult();
+                        if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                            // Il y a déjà un voyage en cours
+                            return Tasks.forException(new Exception("Un voyage est déjà en cours"));
+                        } else {
+                            // Aucun voyage en cours, on peut ajouter le nouveau
+                            return db.collection("voyages").add(voyage);
+                        }
+                    } else {
+                        // Erreur lors de la requête
+                        return Tasks.forException(task.getException());
+                    }
+                });
     }
 
     public Task<DocumentSnapshot> recupererVoyage(String voyageId) {
@@ -33,6 +61,7 @@ public class FirebaseRepository {
         return db.collection("voyages")
                 .document(voyageId)
                 .collection("points")
+                .orderBy("instant")
                 .get();
     }
 
@@ -40,7 +69,7 @@ public class FirebaseRepository {
         FirebaseUser user = auth.getCurrentUser();
         if(user!=null)
             return db.collection("voyages").whereEqualTo("userId",user.getUid())
-                .orderBy("nom", Query.Direction.ASCENDING);
+                .orderBy("debut", Query.Direction.DESCENDING);
         return null;
     }
     public Task<Void> updateVoyage(Voyage voyage) {
@@ -62,7 +91,6 @@ public class FirebaseRepository {
 
     //points
     public Task<DocumentReference> addPoint(String voyageId, Point point) {
-        // Nous ajoutons directement à la sous-collection du voyage spécifié
         return db.collection("voyages").document(voyageId).collection("points")
                 .add(point)
                 .addOnSuccessListener(documentReference -> {

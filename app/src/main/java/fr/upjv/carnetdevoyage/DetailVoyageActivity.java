@@ -9,15 +9,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -25,18 +21,24 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import android.Manifest;
+
+import fr.upjv.carnetdevoyage.Model.Point;
+import fr.upjv.carnetdevoyage.Model.Voyage;
+import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
+import fr.upjv.carnetdevoyage.Service.LocationService;
 
 public class DetailVoyageActivity extends AppCompatActivity implements OnMapReadyCallback {
     private FirebaseRepository db;
@@ -49,7 +51,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
     private TextView textViewNom, textViewDescription, textViewDateDebut;
     private TextView textViewStatus;
     private MapView mapView;
-    private boolean isEncours=false;
+    private boolean isEncours;
     private Button buttonEnregistrerPosition, buttonArreterVoyage, buttonExport;
 
     @Override
@@ -87,7 +89,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                         Voyage voyage = documentSnapshot.toObject(Voyage.class);
                         if (voyage != null) {
                             voyage.setIdVoyage(documentSnapshot.getId());
-
+                            currentVoyage = voyage;
+                            this.isEncours = voyage.isEncours();
                             //Afficher les informations du voyage dans l'interface
                             afficherInfoVoyage(voyage);
 
@@ -119,12 +122,14 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
             textViewStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
             buttonEnregistrerPosition.setVisibility(View.VISIBLE);
             buttonArreterVoyage.setVisibility(View.VISIBLE);
+            buttonExport.setVisibility(View.GONE);
 
         } else {
             textViewStatus.setText("Terminé");
             textViewStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
             buttonEnregistrerPosition.setVisibility(View.GONE);
             buttonArreterVoyage.setVisibility(View.GONE);
+            buttonExport.setVisibility(View.VISIBLE);
 
             if (voyage.getFin() != null) {
                 String dateFin = dateFormat.format(voyage.getFin().toDate());
@@ -146,7 +151,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                     }
 
                     // Afficher les points sur la carte
-                    displayPointsOnMap(points);
+                    updateMapWithVoyagePath(points);
 
                     Log.d("DetailVoyage", "Points chargés: " + points.size());
                 })
@@ -155,55 +160,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                     Toast.makeText(this, "Erreur lors du chargement des points", Toast.LENGTH_SHORT).show();
                 });
     }
-    private void displayPointsOnMap(List<Point> points) {
-        if (map == null) {
-            Log.e("Map", "Map n'est pas prête pour mettre à jour le chemin du voyage.");
-            return;
-        }
 
-        map.clear();
-
-        if (points == null || points.isEmpty()) {
-            Toast.makeText(this, "Aucun point enregistré pour ce voyage.", Toast.LENGTH_SHORT).show();
-            centerMapOnUserLocationOrDefault();
-            return;
-        }
-
-        PolylineOptions polylineOptions = new PolylineOptions(); //definir une ligne de chemin
-        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-        //Recuperer les points pour dessiner le chemin
-        for (Point point : points) {
-            LatLng position = new LatLng(point.getLatitude(), point.getLongitude());
-            polylineOptions.add(position);
-            boundsBuilder.include(position);
-        }
-
-        polylineOptions.color(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
-        polylineOptions.width(8);
-
-        map.addPolyline(polylineOptions); //ajouter ce chemin sur la map
-        //recuperer le point de debut et de fin
-        Point debut = points.get(0);
-        Point fin = points.get(points.size() - 1);
-
-        map.addCircle(new CircleOptions()
-                .center(new LatLng(debut.getLatitude(),debut.getLongitude()))
-                .radius(5) // Petit rayon pour un point
-                .fillColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark))
-                .strokeWidth(0)); // Pas de contour
-
-        String endMarkerTitle = currentVoyage.isEncours() ? "Position actuelle" : "Arrivée";
-        map.addMarker(new MarkerOptions()
-                .position(new LatLng(fin.getLatitude(), fin.getLongitude()))
-                .title(endMarkerTitle));
-
-        if (points.size() > 1) {
-            map.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
-        } else {
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                    new LatLng(fin.getLatitude(), fin.getLongitude()), 15));
-        }
-    }
 
     private void centerMapOnUserLocationOrDefault() {
         if (map == null) {
@@ -250,9 +207,6 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                 } else {
                     centerMapOnUserLocationOrDefault();
                 }
-                // Si l'utilisateur a cliqué sur "Enregistrer une position" et que la permission est accordée,
-                // vous pourriez vouloir appeler onClickEnregistrer() ici si c'était le cas d'origine.
-                // Pour l'instant, on se contente de rafraîchir la carte.
             } else {
                 Toast.makeText(this, "Permission de localisation requise pour certaines fonctionnalités.", Toast.LENGTH_SHORT).show();
             }
@@ -293,7 +247,6 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
 
         polylineOptions.color(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
         polylineOptions.width(8);
-
         map.addPolyline(polylineOptions);
 
         Point start = points.get(0);
@@ -309,9 +262,9 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                 .title(endMarkerTitle));
 
         if (points.size() > 1) {
-            map.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+            map.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
         } else {
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                     new LatLng(end.getLatitude(), end.getLongitude()), 15));
         }
     }
@@ -324,8 +277,52 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                 .setNegativeButton("Non", null)
                 .show();
     }
-    public void onClickEnregistrer(View view) {
 
+    public void onClickEnregistrer(View view) {
+        // Vérifie si le voyage est en cours avant d'enregistrer une position manuelle
+        if (currentVoyage == null || !currentVoyage.isEncours()) {
+            Toast.makeText(this, "Le voyage n'est pas en cours. Impossible d'enregistrer une position.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+
+        // Vérifier la permission de localisation
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // La permission n'est pas accordée, on va la redemander
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+            return;
+        }
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        // Crée un nouvel objet Point
+                        Point newPoint = new Point();
+                        newPoint.setLatitude(location.getLatitude());
+                        newPoint.setLongitude(location.getLongitude());
+                        newPoint.setInstant(new Timestamp(new Date()));
+
+                        // Enregistre le Point dans Firebase
+                        db.addPoint(voyageId, newPoint)
+                                .addOnSuccessListener(documentReference -> {
+                                    Toast.makeText(DetailVoyageActivity.this, "Position enregistrée !", Toast.LENGTH_SHORT).show();
+                                    Log.d("Service de localisation", "Position: " + location.getLatitude() + ", " + location.getLongitude());
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("DetailVoyage", "Erreur lors de l'enregistrement du point", e);
+                                    Toast.makeText(DetailVoyageActivity.this, "Erreur lors de l'enregistrement de la position.", Toast.LENGTH_SHORT).show();
+                                });
+                    } else {
+                        Toast.makeText(this, "Impossible d'obtenir la position actuelle. Veuillez réessayer.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("DetailVoyage", "Erreur lors de la récupération de la position pour enregistrement", e);
+                    Toast.makeText(this, "Erreur de localisation: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
 

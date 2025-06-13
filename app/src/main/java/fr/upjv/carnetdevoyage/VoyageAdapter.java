@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import fr.upjv.carnetdevoyage.Model.Voyage;
+
 public class VoyageAdapter extends RecyclerView.Adapter<VoyageViewHolder> {
 
     private List<Voyage> lesVoyages;
