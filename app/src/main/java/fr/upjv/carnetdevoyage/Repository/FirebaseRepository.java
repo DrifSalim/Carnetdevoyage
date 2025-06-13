@@ -35,7 +35,7 @@ public class FirebaseRepository {
         // Vérifier s'il y a un voyage en cours
         return db.collection("voyages")
                 .whereEqualTo("userId", userId)
-                .whereEqualTo("encours", true) // Supposons qu'il y a un champ boolean "enCours"
+                .whereEqualTo("encours", true)
                 .get()
                 .continueWithTask(task -> {
                     if (task.isSuccessful()) {
@@ -57,6 +57,7 @@ public class FirebaseRepository {
     public Task<DocumentSnapshot> recupererVoyage(String voyageId) {
         return db.collection("voyages").document(voyageId).get();
     }
+
     public Task<QuerySnapshot> recupererPointsDuVoyage(String voyageId) {
         return db.collection("voyages")
                 .document(voyageId)
@@ -65,7 +66,7 @@ public class FirebaseRepository {
                 .get();
     }
 
-    public Query recupererTousVoyages() {
+    public Query recupererTousVoyages() { //les voyages d'un utilisateur
         FirebaseUser user = auth.getCurrentUser();
         if(user!=null)
             return db.collection("voyages").whereEqualTo("userId",user.getUid())
@@ -101,10 +102,4 @@ public class FirebaseRepository {
                 });
     }
 
-
-
-    // Interface pour la synchronisation
-    public interface OnVoyageLoadedListener {
-        void onVoyageLoaded(Voyage voyage);
-    }
 }
