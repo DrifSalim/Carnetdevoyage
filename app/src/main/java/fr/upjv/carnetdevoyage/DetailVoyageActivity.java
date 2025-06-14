@@ -422,8 +422,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                 .setTitle("Choisir le format d'export")
                 .setItems(options, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
+                    public void onClick(DialogInterface dialog, int position) {
+                        if (position == 0) {
                             exportAndSendByEmail("KML");
                         } else {
                             exportAndSendByEmail("GPX");
@@ -465,9 +465,9 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         }
 
         // Créer le nom du fichier avec la date
-        SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-        String timestamp = fileNameFormat.format(new Date());
-        String fileName = currentVoyage.getNom().replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp;
+        SimpleDateFormat dateNameFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        String dateFormatee = dateNameFormat.format(currentVoyage.getDebut().toDate());
+        String fileName = "Voyage_"+currentVoyage.getNom().replaceAll("[^a-zA-Z0-9]", "_") + "_" + dateFormatee;
 
         // Créer le fichier avec la bonne extension
         String extension = format.equals("KML") ? ".kml" : ".gpx";
@@ -490,8 +490,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
 
             // Créer l'intent pour envoyer un email
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            emailIntent.setData(Uri.parse("mailto:"));
-            //emailIntent.setType("message/rfc822");
+            //emailIntent.setData(Uri.parse("mailto:")); mail to ne gère pas les pièces jointes c pour ca on la commenté
+            emailIntent.setType("message/rfc822"); //MIME pour le format emails
             // Préparer le sujet et le message
             String subject = "Voyage "+currentVoyage.getNom()+" - Exporté en " + format;
             String body = createEmailBody();
@@ -500,10 +500,9 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
             emailIntent.putExtra(Intent.EXTRA_TEXT, body);
             emailIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
 
-            // Donner permission de lecture pour le fichier
+            // Donner permission de lecture pour le fichier dans le flag
             emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(emailIntent,"Partager par email"));
-
+            startActivity(Intent.createChooser(emailIntent, "Envoyer le fichier par email"));
         } catch (Exception e) {
             Log.e("Email", "Erreur lors de l'envoi: " + e.getMessage(), e);
             Toast.makeText(this, "Erreur lors de l'envoi: " + e.getMessage(), Toast.LENGTH_SHORT).show();

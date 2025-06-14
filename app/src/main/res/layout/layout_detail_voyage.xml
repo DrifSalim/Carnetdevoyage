@@ -98,9 +98,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_weight="1"
-            android:backgroundTint="@android:color/darker_gray"
+            android:backgroundTint="#E2B4B4"
             android:onClick="onClickExporter"
-            android:text="Exporter" />
+            android:text="Partager par Email" />
 
     </LinearLayout>
 

@@ -52,5 +52,6 @@
             android:text="Statut"
             android:textStyle="bold"
             android:textColor="#388E3C" />
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -1,16 +1,16 @@
 package fr.upjv.carnetdevoyage;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,20 +24,19 @@ import java.util.List;
 import fr.upjv.carnetdevoyage.Model.Voyage;
 import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
 
-public class MainActivity extends AppCompatActivity {
+public class ToutVoyagesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private FirebaseRepository db;
     private FirebaseAuth auth;
     private List<Voyage> voyages;
     private VoyageAdapter monVoyageAdapter;
-    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.layout_tout_voyages);
 
         voyages = new ArrayList<>();
         recyclerView = findViewById(R.id.recyclerView);
@@ -48,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
 
         db = new FirebaseRepository();
         auth = FirebaseAuth.getInstance();
-        checkAndRequestNotificationPermissions();
 
     }
 
@@ -68,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         monVoyageAdapter.setOnItemClickListener(new VoyageAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Voyage voyage) {
-                Intent i = new Intent(MainActivity.this, DetailVoyageActivity.class);
+                Intent i = new Intent(ToutVoyagesActivity.this, DetailVoyageActivity.class);
                 i.putExtra("voyageId",voyage.getIdVoyage());
                 startActivity(i);
             }
@@ -76,13 +74,12 @@ public class MainActivity extends AppCompatActivity {
 
         loadVoyages();
     }
-
-    private void loadVoyages() {
+    public void loadVoyages(){
         this.voyages = new ArrayList<>();
-        db.recupererTousVoyages().addSnapshotListener((value, error) -> {
+        db.getTousLesVoyages().addSnapshotListener((value, error) -> {
             if (error != null) {
-                Log.e("MainActivity", "Erreur Firestore", error);
-                Toast.makeText(MainActivity.this, "Erreur de chargement: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e("ToutVoyagesActivity", "Erreur Firestore", error);
+                Toast.makeText(ToutVoyagesActivity.this, "Erreur de chargement: " + error.getMessage(), Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -95,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         voyage.setIdVoyage(document.getId());
                         voyages.add(voyage);
                     } else {
-                        Log.w("MainActivity", "Document non convertible : " + document.getId());
+                        Log.w("ToutVoyagesActivity", "Document non convertible : " + document.getId());
                     }
                 }
 
@@ -110,23 +107,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void onClickCreerVoyage(View view) {
-        Intent intent = new Intent(this, CreerVoyageActivity.class);
-        startActivity(intent);
-    }
-
-    private void checkAndRequestNotificationPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                        NOTIFICATION_PERMISSION_REQUEST_CODE);
-            }
-        }
-    }
-
-    public void onClickVoirTousLesVoyage(View view) {
-        Intent i = new Intent(this,ToutVoyagesActivity.class);
-        startActivity(i);
+    public void onClickRetourMesVoyage(View view) {
+        finish();
     }
 }

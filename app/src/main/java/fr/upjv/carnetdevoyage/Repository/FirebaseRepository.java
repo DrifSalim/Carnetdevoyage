@@ -101,5 +101,10 @@ public class FirebaseRepository {
                     Log.e("Point", "Erreur lors de l'ajout du point au voyage " + voyageId, e);
                 });
     }
-
+    public Query getTousLesVoyages() { //tous les voyages de la collection
+        FirebaseUser user = auth.getCurrentUser();
+        if(user!=null)
+            return db.collection("voyages").orderBy("debut", Query.Direction.DESCENDING);
+        return null;
+    }
 }
