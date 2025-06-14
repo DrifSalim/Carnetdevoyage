@@ -99,8 +99,8 @@ public class RegisterActivity extends AppCompatActivity {
         db.collection("users").document(userId)
                 .set(user)
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(RegisterActivity.this, "Inscription réussie",
-                            Toast.LENGTH_SHORT).show();
+                    /*Toast.makeText(RegisterActivity.this, "Inscription réussie",
+                            Toast.LENGTH_SHORT).show();*/
 
                     // Redirection vers MainActivity
                     Intent i = new Intent(this, MainActivity.class);

@@ -12,13 +12,8 @@ import java.util.TimeZone; // Importation ajoutée pour TimeZone
 
 public class VoyageFileGenerator {
 
-    /**
-     * Génère le contenu KML pour un voyage donné à partir d'une liste de points.
-     *
-     * @param voyage L'objet Voyage contenant le nom et la description.
-     * @param points La liste des objets Point qui composent le tracé du voyage.
-     * @return Une chaîne de caractères représentant le contenu XML du fichier KML.
-     */
+
+     //Génèret le contenu KML pour un voyage donné à partir d'une liste de points d'un voyage.
     public static String generateKml(Voyage voyage, List<Point> points) {
         StringBuilder kml = new StringBuilder();
         kml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -27,9 +22,8 @@ public class VoyageFileGenerator {
         kml.append("  <name>").append(voyage.getNom()).append("</name>\n");
         kml.append("  <description>").append(voyage.getDescription()).append("</description>\n");
 
-        // Ajout des points individuels (optionnel, mais utile pour les marqueurs)
+        // Ajout des points individuels
         SimpleDateFormat kmlSdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US); // Format KML
-        // Il est souvent bon de définir le fuseau horaire UTC pour les formats KML/GPX
         kmlSdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         for (Point point : points) {
@@ -47,8 +41,6 @@ public class VoyageFileGenerator {
         kml.append("  <Placemark>\n");
         kml.append("    <name>Tracé du Voyage</name>\n");
         kml.append("    <LineString>\n");
-        kml.append("      <extrude>1</extrude>\n"); // Pour l'afficher comme extrudé du sol (si supporté)
-        kml.append("      <tessellate>1</tessellate>\n"); // Pour diviser la ligne en segments (si supporté)
         kml.append("      <altitudeMode>clampToGround</altitudeMode>\n"); // Fixé au sol
         kml.append("      <coordinates>");
         for (int i = 0; i < points.size(); i++) {
@@ -67,13 +59,8 @@ public class VoyageFileGenerator {
         return kml.toString();
     }
 
-    /**
-     * Génère le contenu GPX pour un voyage donné à partir d'une liste de points.
-     *
-     * @param voyage L'objet Voyage contenant le nom et la description.
-     * @param points La liste des objets Point qui composent le tracé du voyage.
-     * @return Une chaîne de caractères représentant le contenu XML du fichier GPX.
-     */
+
+     // Génère le contenu GPX pour un voyage donné à partir d'une liste de points.
     public static String generateGpx(Voyage voyage, List<Point> points) {
         StringBuilder gpx = new StringBuilder();
         SimpleDateFormat gpxSdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US); // Format GPX (ISO 8601 UTC)
