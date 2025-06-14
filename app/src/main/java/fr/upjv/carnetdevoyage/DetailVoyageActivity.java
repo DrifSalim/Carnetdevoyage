@@ -1,8 +1,11 @@
 package fr.upjv.carnetdevoyage;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +17,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -28,6 +32,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,6 +46,7 @@ import fr.upjv.carnetdevoyage.Model.Point;
 import fr.upjv.carnetdevoyage.Model.Voyage;
 import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
 import fr.upjv.carnetdevoyage.Service.LocationService;
+import fr.upjv.carnetdevoyage.utils.VoyageFileGenerator;
 
 public class DetailVoyageActivity extends AppCompatActivity implements OnMapReadyCallback {
     private FirebaseRepository db;
@@ -149,8 +157,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                             points.add(point);
                         }
                     }
-
                     // Afficher les points sur la carte
+                    this.currentVoyage.setPosition(points);
                     updateMapWithVoyagePath(points);
 
                     Log.d("DetailVoyage", "Points chargés: " + points.size());
@@ -217,8 +225,10 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         map = googleMap;
 
         if (currentVoyage != null && currentVoyage.getPosition() != null && !currentVoyage.getPosition().isEmpty()) {
+            //Si un voyage est deja en cours et pas vide on affiche le voyage sur la map
             updateMapWithVoyagePath(currentVoyage.getPosition());
         } else {
+            //Si non on affiche juste la localisation de l'utilisateur
             centerMapOnUserLocationOrDefault();
         }
     }
@@ -235,8 +245,9 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
             centerMapOnUserLocationOrDefault();
             return;
         }
-
+        //Polyline pour la ligne
         PolylineOptions polylineOptions = new PolylineOptions();
+        //Pour centrer la map sur le chemin
         LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
 
         for (Point point : points) {
@@ -247,6 +258,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
 
         polylineOptions.color(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
         polylineOptions.width(8);
+        //afficher la ligne
         map.addPolyline(polylineOptions);
 
         Point start = points.get(0);
@@ -305,7 +317,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                         newPoint.setLongitude(location.getLongitude());
                         newPoint.setInstant(new Timestamp(new Date()));
 
-                        // Enregistre le Point dans Firebase
+                        // Enregistrer le Point dans Firebase
                         db.addPoint(voyageId, newPoint)
                                 .addOnSuccessListener(documentReference -> {
                                     Toast.makeText(DetailVoyageActivity.this, "Position enregistrée !", Toast.LENGTH_SHORT).show();
@@ -326,8 +338,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
     }
 
 
-    public void onClickExporter(View view) {
-    }
+
     private void terminerVoyage() {
         if (currentVoyage == null || !currentVoyage.isEncours()) {
             return;
@@ -396,6 +407,126 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
+    }
+
+    public void onClickExporter(View view) {
+        // Vérifier qu'il y a des données à exporter
+        if (currentVoyage == null || currentVoyage.getPosition() == null || currentVoyage.getPosition().isEmpty()) {
+            Toast.makeText(this, "Aucun point enregistré à exporter", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Dialog pour choisir le format d'export
+        String[] options = {"KML", "GPX"};
+        new AlertDialog.Builder(this)
+                .setTitle("Choisir le format d'export")
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            exportAndSendByEmail("KML");
+                        } else {
+                            exportAndSendByEmail("GPX");
+                        }
+                    }
+                })
+                .show();
+    }
+
+    private void exportAndSendByEmail(String format) {
+        try {
+            // Générer le contenu du fichier (classe VoyageFileGenerator qui est dans util)
+            String fileContent;
+            if (format.equals("KML")) {
+                fileContent = VoyageFileGenerator.generateKml(currentVoyage, currentVoyage.getPosition());
+            } else {
+                fileContent = VoyageFileGenerator.generateGpx(currentVoyage, currentVoyage.getPosition());
+            }
+
+            //Créer le fichier sur le téléphone
+            File file = createFileFromContent(fileContent, format);
+
+            //Envoyer par email
+            if (file != null) {
+                sendEmailWithAttachment(file, format);
+            }
+
+        } catch (Exception e) {
+            Log.e("Export", "Erreur lors de l'export: " + e.getMessage(), e);
+            Toast.makeText(this, "Erreur lors de l'export: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private File createFileFromContent(String content, String format) throws IOException {
+        // Créer le dossier d'export
+        File exportDir = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "exports");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        // Créer le nom du fichier avec la date
+        SimpleDateFormat fileNameFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+        String timestamp = fileNameFormat.format(new Date());
+        String fileName = currentVoyage.getNom().replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp;
+
+        // Créer le fichier avec la bonne extension
+        String extension = format.equals("KML") ? ".kml" : ".gpx";
+        File file = new File(exportDir, fileName + extension);
+
+        // Écrire le contenu dans le fichier
+        FileWriter writer = new FileWriter(file);
+        writer.write(content);
+        writer.close();
+
+        Log.d("Export", "Fichier créé: " + file.getAbsolutePath());
+        return file;
+    }
+
+    private void sendEmailWithAttachment(File file, String format) {
+        try {
+            // Créer l'URI du fichier pour le partage
+            Uri fileUri = FileProvider.getUriForFile(this,
+                    "fr.upjv.carnetdevoyage.fileprovider", file);
+
+            // Créer l'intent pour envoyer un email
+            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+            emailIntent.setData(Uri.parse("mailto:"));
+            //emailIntent.setType("message/rfc822");
+            // Préparer le sujet et le message
+            String subject = "Voyage "+currentVoyage.getNom()+" - Exporté en " + format;
+            String body = createEmailBody();
+
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+            emailIntent.putExtra(Intent.EXTRA_TEXT, body);
+            emailIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+
+            // Donner permission de lecture pour le fichier
+            emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(emailIntent,"Partager par email"));
+
+        } catch (Exception e) {
+            Log.e("Email", "Erreur lors de l'envoi: " + e.getMessage(), e);
+            Toast.makeText(this, "Erreur lors de l'envoi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String createEmailBody() {
+        StringBuilder body = new StringBuilder();
+        body.append("Voici mon voyage : \"").append(currentVoyage.getNom()).append("\".\n\n");
+        body.append("Description : ").append(currentVoyage.getDescription()).append("\n");
+
+        // Date de début
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        body.append("Que j'ai commencé le : ").append(dateFormat.format(currentVoyage.getDebut().toDate())).append("\n");
+
+        // Date de fin si le voyage est terminé
+        if (!currentVoyage.isEncours() && currentVoyage.getFin() != null) {
+            body.append("et Fini le : ").append(dateFormat.format(currentVoyage.getFin().toDate())).append("\n");
+        }
+
+        body.append("Nombre de points enregistrés : ").append(currentVoyage.getPosition().size()).append("\n");
+
+        return body.toString();
     }
 
 }

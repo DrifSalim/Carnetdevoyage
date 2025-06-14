@@ -1,12 +1,16 @@
 package fr.upjv.carnetdevoyage;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private List<Voyage> voyages;
     private VoyageAdapter monVoyageAdapter;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
 
         db = new FirebaseRepository();
         auth = FirebaseAuth.getInstance();
+        checkAndRequestNotificationPermissions();
+
     }
 
     @Override
@@ -71,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadVoyages() {
         this.voyages = new ArrayList<>();
-
         db.recupererTousVoyages().addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("MainActivity", "Erreur Firestore", error);
@@ -106,5 +113,15 @@ public class MainActivity extends AppCompatActivity {
     public void onClickCreerVoyage(View view) {
         Intent intent = new Intent(this, CreerVoyageActivity.class);
         startActivity(intent);
+    }
+
+    private void checkAndRequestNotificationPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
+        }
     }
 }

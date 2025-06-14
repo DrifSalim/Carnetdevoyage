@@ -44,10 +44,18 @@
             android:name=".Service.LocationService"
             android:foregroundServiceType="location"
             android:exported="false" />
-
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="fr.upjv.carnetdevoyage.fileprovider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value=""/>
+            android:value="AIzaSyD7e7x1Rko5h2QMAtBm-laoUMgaYER51aQ"/>
     </application>
 
 </manifest>

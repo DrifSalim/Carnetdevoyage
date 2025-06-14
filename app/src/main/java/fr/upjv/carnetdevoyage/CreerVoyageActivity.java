@@ -21,7 +21,6 @@ import fr.upjv.carnetdevoyage.Repository.FirebaseRepository;
 import fr.upjv.carnetdevoyage.Service.LocationService;
 
 public class CreerVoyageActivity extends AppCompatActivity {
-    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     EditText nomEditText;
@@ -43,6 +42,7 @@ public class CreerVoyageActivity extends AppCompatActivity {
         seekBar.setProgress(15);
         frequenceTextView.setText("Frequence: "+ seekBar.getProgress() +" secondes.");
         db = new FirebaseRepository();
+        checkAndRequestLocationPermissions();
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -57,11 +57,20 @@ public class CreerVoyageActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) { }
         });
-
     }
 
 
     public void onClickCreerVoyage(View view) {
+        //Verifier si l'autorisation esr accordée
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+            Toast.makeText(this, "Vous devez accepter la permission de localisation pour créer un voyage", Toast.LENGTH_LONG).show();
+
+            return;
+        }
         String nom = nomEditText.getText().toString().trim();
         String description = descriptionEditText.getText().toString().trim();
         int seekbar = seekBar.getProgress();
@@ -70,27 +79,10 @@ public class CreerVoyageActivity extends AppCompatActivity {
             nomEditText.requestFocus();
             return;
         }
-        //Si la permission de notifications, n'est pas accorder on va la demandé
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
-                        NOTIFICATION_PERMISSION_REQUEST_CODE);
-                return;
-            }
-        }
-
-        //Si la permission d'acces a la position, n'est pas accorder on va la demandé
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-            return;
-        }
         Voyage v = new Voyage(nom, description, seekbar);
         db.ajouterVoyage(v).addOnSuccessListener(documentReference -> {
             Toast.makeText(this, "Voyage créée avec succès", Toast.LENGTH_SHORT).show();
-                    //Si tout va bien, lancer le service
+            //Si tout va bien, lancer le service
             Intent serviceIntent = new Intent(this, LocationService.class);
             serviceIntent.putExtra("voyageId", documentReference.getId());
             serviceIntent.putExtra("frequence", seekbar);
@@ -102,4 +94,27 @@ public class CreerVoyageActivity extends AppCompatActivity {
 
                 });
     }
+
+    private void checkAndRequestLocationPermissions(){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission accordée
+                Toast.makeText(this, "Permission de localisation accordée", Toast.LENGTH_SHORT).show();
+            } else {
+                // Permission refusée
+                Toast.makeText(this, "Permission de localisation refusée - certaines fonctionnalités ne seront pas disponibles", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
 }
