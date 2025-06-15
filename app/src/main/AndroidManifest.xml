@@ -59,7 +59,7 @@
         </provider>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value=""/>
+            android:value="AIzaSyD7e7x1Rko5h2QMAtBm-laoUMgaYER51aQ"/>
     </application>
 
 </manifest>

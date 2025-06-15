@@ -63,8 +63,8 @@ public class VoyageFileGenerator {
      // Génère le contenu GPX pour un voyage donné à partir d'une liste de points.
     public static String generateGpx(Voyage voyage, List<Point> points) {
         StringBuilder gpx = new StringBuilder();
-        SimpleDateFormat gpxSdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US); // Format GPX (ISO 8601 UTC)
-        gpxSdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Important: GPX times are UTC
+        SimpleDateFormat gpxSdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US); // Format GPX
+        gpxSdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         gpx.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         gpx.append("<gpx\n");

@@ -3,6 +3,7 @@ package fr.upjv.carnetdevoyage.Model;
 import com.google.firebase.Timestamp;
 
 public class Point {
+    
     private String idPoint;
     private double longitude;
     private double latitude;

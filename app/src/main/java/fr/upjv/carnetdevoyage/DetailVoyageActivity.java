@@ -511,12 +511,12 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
 
     private String createEmailBody() {
         StringBuilder body = new StringBuilder();
-        body.append("Voici mon voyage : \"").append(currentVoyage.getNom()).append("\".\n\n");
+        body.append("Voici le voyage : \"").append(currentVoyage.getNom()).append("\".\n\n");
         body.append("Description : ").append(currentVoyage.getDescription()).append("\n");
 
         // Date de début
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        body.append("Que j'ai commencé le : ").append(dateFormat.format(currentVoyage.getDebut().toDate())).append("\n");
+        body.append("Démarré le : ").append(dateFormat.format(currentVoyage.getDebut().toDate())).append("\n");
 
         // Date de fin si le voyage est terminé
         if (!currentVoyage.isEncours() && currentVoyage.getFin() != null) {

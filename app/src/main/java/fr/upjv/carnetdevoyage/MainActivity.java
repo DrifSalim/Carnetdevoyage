@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseRepository db;
     private FirebaseAuth auth;
     private List<Voyage> voyages;
-    private VoyageAdapter monVoyageAdapter;
+    private VoyageAdapter monVoyageAdapter;// elle nous permet de dire comment et qsq on va affocher
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
 
 
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (value != null) {
-                voyages.clear(); // Nettoie la liste avant d'ajouter
+                voyages.clear(); // Nettoyer la liste avant d'ajouter
 
                 for (QueryDocumentSnapshot document : value) {
                     Voyage voyage = document.toObject(Voyage.class);
