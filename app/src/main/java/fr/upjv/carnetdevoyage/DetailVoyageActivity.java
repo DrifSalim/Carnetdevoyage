@@ -103,7 +103,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                             voyage.setIdVoyage(documentSnapshot.getId());
                             currentVoyage = voyage;
                             this.isEncours = voyage.isEncours();
-                            //Verifier l'utilisateur s'il est le proprietaire
+                            //Verifier l'utilisateur s'il est le proprietaire du voyage
                             checkCreateur(voyage);
                             //Afficher les informations du voyage dans l'interface
                             afficherInfoVoyage(voyage);
