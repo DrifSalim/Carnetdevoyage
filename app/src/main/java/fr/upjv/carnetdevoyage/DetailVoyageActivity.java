@@ -30,6 +30,8 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 
 import java.io.File;
@@ -61,6 +63,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
     private MapView mapView;
     private boolean isEncours;
     private Button buttonEnregistrerPosition, buttonArreterVoyage, buttonExport;
+    FirebaseAuth auth;
+    private boolean createur = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +90,7 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
         buttonArreterVoyage = findViewById(R.id.buttonArreterVoyage);
         buttonEnregistrerPosition = findViewById(R.id.buttonEnregistrerPosition);
         buttonExport = findViewById(R.id.buttonExport);
-
+        auth = FirebaseAuth.getInstance();
         loadVoyage();
     }
     private void loadVoyage() {
@@ -99,6 +103,8 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                             voyage.setIdVoyage(documentSnapshot.getId());
                             currentVoyage = voyage;
                             this.isEncours = voyage.isEncours();
+                            //Verifier l'utilisateur
+                            checkCreateur(voyage);
                             //Afficher les informations du voyage dans l'interface
                             afficherInfoVoyage(voyage);
 
@@ -117,6 +123,14 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
                     Toast.makeText(this, "Erreur de connexion", Toast.LENGTH_SHORT).show();
                 });
     }
+    private void checkCreateur(Voyage v){
+        FirebaseUser user = auth.getCurrentUser();
+        if (user != null && v.getUserId() != null) {
+            createur = user.getUid().equals(v.getUserId());
+        } else {
+            createur = false;
+        }
+    }
     private void afficherInfoVoyage(Voyage voyage) {
         textViewNom.setText(voyage.getNom());
         textViewDescription.setText(voyage.getDescription());
@@ -131,6 +145,13 @@ public class DetailVoyageActivity extends AppCompatActivity implements OnMapRead
             buttonEnregistrerPosition.setVisibility(View.VISIBLE);
             buttonArreterVoyage.setVisibility(View.VISIBLE);
             buttonExport.setVisibility(View.GONE);
+            if (createur) {
+                buttonEnregistrerPosition.setVisibility(View.VISIBLE);
+                buttonArreterVoyage.setVisibility(View.VISIBLE);
+            } else {
+                buttonEnregistrerPosition.setVisibility(View.GONE);
+                buttonArreterVoyage.setVisibility(View.GONE);
+            }
 
         } else {
             textViewStatus.setText("Terminé");
